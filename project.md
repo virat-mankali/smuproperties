@@ -1,7 +1,7 @@
 # Real Estate Map Application — Setup Guide
 
 > **Project Stack:** React Native (Expo) · Next.js/Vite · Convex · Clerk · Google Maps API  
-> **Important Note on the Clerk + Convex Auth Method:** The old approach of configuring JWT templates in Clerk is **no longer required**. The new approach works like this: you activate the Convex integration inside the Clerk Dashboard, copy your **Frontend API URL** from there, store it as an environment variable (`CLERK_JWT_ISSUER_DOMAIN`), and reference it inside a file called `auth.config.ts` in your `convex/` folder. Running `npx convex dev` syncs that config to the backend — nothing is manually pasted into the Convex Dashboard for auth setup. This guide reflects that updated flow.
+> **Important Note on the Clerk + Convex Auth Method:** The old approach of configuring JWT templates in Clerk is **no longer required**. The new approach works like this: you activate the Convex integration inside the Clerk Dashboard, copy your **Frontend API URL** from there, store it as an environment variable (`CLERK_FRONTEND_API_URL`), and reference it inside a file called `auth.config.ts` in your `convex/` folder. Running `npx convex dev` syncs that config to the backend — nothing is manually pasted into the Convex Dashboard for auth setup. This guide reflects that updated flow.
 
 ---
 
@@ -105,27 +105,38 @@ This phase fully configures your Clerk application — setting up your app, defi
 
 ### 2.1 Create a Clerk Application
 
-1. Log into [clerk.com](https://clerk.com) → Click **"Add Application"**
-2. Give it a name: e.g., `RealEstateApp`
-3. Select your sign-in methods:
-   - ✅ **Email + Password** (required for all roles)
-   - ✅ **Google OAuth** (for Customers only — disable for Agent/Admin flows)
-4. Click **Create Application**
+1. [Create a Clerk account](https://dashboard.clerk.com/sign-up) or sign into the [Clerk Dashboard](https://dashboard.clerk.com)
+2. If this is your first time, you'll land directly on the interactive authentication setup form. Otherwise, from the dashboard, select the **Create application** card to get there
+3. In the interactive setup form, you will configure two things separately:
 
-Clerk will generate two keys — copy them now:
+   **Identifiers** — how users are identified at sign-up/sign-in. For this project select:
+   - ✅ **Email address** (required for all roles)
+
+   **Social providers** — third-party OAuth login options. For this project select:
+   - ✅ **Google** (for Customers only — enforcement is handled in your app routing, not here)
+
+4. Once done, your application will be created and you'll land on the app dashboard
+
+### 2.2 Copy Your API Keys
+
+After the app is created, go to **Configure → API Keys** in the left sidebar. Under the **Quick Copy** section, copy your **Publishable Key**. You will also need the **Secret Key** for server-side use.
+
+Add them to your `.env` files:
 
 ```env
-# .env.local (Mobile)
+# Mobile app (.env.local)
 EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_xxxx
 
-# .env.local (Web Admin)
+# Web Admin app (.env.local)
 VITE_CLERK_PUBLISHABLE_KEY=pk_test_xxxx
 
-# Secret key — server/backend use only, never expose to client
+# Server-side only — never expose this to the client
 CLERK_SECRET_KEY=sk_test_xxxx
 ```
 
-### 2.2 Configure User Roles via Public Metadata
+> In development, your Publishable Key will start with `pk_test_`. In production it will start with `pk_live_`. Make sure you update your env files and your hosting platform (Vercel, etc.) when you go to production.
+
+### 2.3 Configure User Roles via Public Metadata
 
 Clerk does not have a built-in "roles" field — roles are stored in `publicMetadata`. You will define three roles: `admin`, `agent`, `customer`.
 
@@ -141,7 +152,7 @@ Clerk does not have a built-in "roles" field — roles are stored in `publicMeta
 ```
 4. Save. This is a one-time action. All future agents are created programmatically (see Phase 4).
 
-### 2.3 Configure Allowed Redirect URLs
+### 2.4 Configure Allowed Redirect URLs
 
 1. In Clerk Dashboard → **Paths** (or **Redirect URLs**)
 2. Add your development URLs:
@@ -149,7 +160,7 @@ Clerk does not have a built-in "roles" field — roles are stored in `publicMeta
    - `http://localhost:5173` (Vite web admin)
 3. Add your production URLs when ready to deploy
 
-### 2.4 Restrict Google OAuth to Customers Only (Optional but Recommended)
+### 2.5 Restrict Google OAuth to Customers Only (Optional but Recommended)
 
 Since Agents and Admins should only log in with email/password for security:
 
@@ -159,20 +170,24 @@ Since Agents and Admins should only log in with email/password for security:
 
 ### 2.6 Activate the Convex Integration in Clerk & Get Your Frontend API URL
 
-This is the step that links Clerk to Convex. It must be done in the Clerk Dashboard before any Convex configuration.
+This is the step that officially links Clerk to Convex. It must be done in the Clerk Dashboard before any Convex configuration.
 
-1. In the Clerk Dashboard, navigate to the **Integrations** section (also accessible at `dashboard.clerk.com/apps/setup/convex`)
-2. Find **Convex** and activate it
-3. Once activated, Clerk will display your app's **Frontend API URL** — copy this value
+1. In the Clerk Dashboard, navigate to the **Integrations** section — or go directly to `dashboard.clerk.com/apps/setup/convex`
+2. Choose your configuration options and then click **Activate Convex integration**
+3. Once activated, Clerk will reveal your app's **Frontend API URL** — copy this value
    - In development it looks like: `https://verb-noun-00.clerk.accounts.dev`
    - In production it looks like: `https://clerk.your-domain.com`
 4. Store this in your `.env` file as:
 
 ```env
-CLERK_JWT_ISSUER_DOMAIN=https://verb-noun-00.clerk.accounts.dev
+CLERK_FRONTEND_API_URL=https://verb-noun-00.clerk.accounts.dev
 ```
 
-> You will use this value in the next phase when configuring Convex. Do **not** skip this step — Convex needs this URL to know which Clerk instance to trust when validating tokens.
+> You will use this value in Phase 3 when configuring Convex. Do **not** skip this step — Convex needs this URL to know which Clerk instance to trust when validating tokens.
+
+**Optional — Map Additional Claims**
+
+If you need to include additional user data (like a role) directly inside the session token, go to the **Sessions** page in the Clerk Dashboard. Under the **Claims** section, the default `aud` claim required by Convex is already pre-mapped. You can add extra claims using Clerk shortcodes (e.g. `{{user.public_metadata.role}}`). For this project, roles are read from the Convex `users` table rather than from the token directly, so this step is optional.
 
 ### 2.7 Enable the Clerk Backend API (For Agent Provisioning)
 
@@ -219,24 +234,24 @@ EXPO_PUBLIC_CONVEX_URL=https://xxxxx.convex.cloud
 VITE_CONVEX_URL=https://xxxxx.convex.cloud
 ```
 
-### 3.2 Configure Convex to Trust Clerk (The Correct New Method)
+### 3.2 Configure Convex to Trust Clerk (The Correct Method)
 
-> ⚠️ **Critical correction from the old approach.** You do NOT paste anything into the Convex Dashboard UI for auth setup. The configuration is done entirely through a file in your codebase called `auth.config.ts`, which Convex reads and syncs when you run `npx convex dev`.
+> ⚠️ **You do NOT paste anything into the Convex Dashboard UI for auth setup.** The configuration is done entirely through a file in your codebase called `auth.config.ts`, which Convex reads and syncs automatically when you run `npx convex dev`.
 
 **How it works:**
 
-Convex needs to know which authentication provider to trust. You tell it by creating a file at `convex/auth.config.ts`. This file specifies the `domain` (your Clerk Frontend API URL from step 2.6) and the `applicationID` which is always set to `"convex"` for this integration.
+Convex needs to know which authentication provider to trust. You tell it by creating a file at `convex/auth.config.ts`. This file specifies two things: the `domain` (your Clerk Frontend API URL, stored as `CLERK_FRONTEND_API_URL`) and the `applicationID`, which is always the string `"convex"` for this integration. That's the entire file.
 
 **Steps:**
 
 1. Inside your project's `convex/` folder, create a new file: `auth.config.ts`
-2. In that file, set the `domain` to use your `CLERK_JWT_ISSUER_DOMAIN` environment variable and the `applicationID` to `"convex"`
+2. In that file, set `domain` to `process.env.CLERK_FRONTEND_API_URL` and set `applicationID` to `"convex"`
 3. Save the file
-4. Run `npx convex dev` in your terminal — this automatically syncs the new config to your Convex backend
+4. Run `npx convex dev` in your terminal — this automatically syncs the new auth config to your Convex backend
 
-That's all that's needed for the authentication link. Convex will now be able to validate tokens issued by your Clerk instance. No dashboard UI steps. No copying and pasting URLs into Convex. The file + `npx convex dev` is the entire process.
+That's all. Convex will now validate every token it receives by checking it against your Clerk instance. No Convex Dashboard UI steps. No copying URLs into Convex manually. The file + `npx convex dev` is the entire process.
 
-> **Dev vs Prod environments:** For your development Convex deployment, set `CLERK_JWT_ISSUER_DOMAIN` to your Clerk dev instance URL in the Convex Dashboard under **Settings → Environment Variables** for the dev deployment. For production, switch to the production deployment in the Convex Dashboard and set the production Clerk URL there. Running `npx convex deploy` syncs the production config.
+> **Dev vs Prod environments:** In the Convex Dashboard, switch to your **dev deployment** under Settings → Environment Variables and set `CLERK_FRONTEND_API_URL` to your Clerk development URL. Then switch to your **prod deployment** and set the production Clerk URL there. Running `npx convex dev` applies the dev config; `npx convex deploy` applies the prod config.
 
 ### 3.3 Define the Convex Database Schema
 
@@ -503,7 +518,11 @@ export default function RootLayout() {
 }
 ```
 
-> **How this works:** `ConvexProviderWithClerk` from `convex/react-clerk` automatically fetches the Clerk auth token and passes it to Convex with every request. Convex then validates it against the `auth.config.ts` configuration you set up in Phase 3. This is entirely automatic — no manual token handling needed in your app code.
+> **How this works:** `ConvexProviderWithClerk` from `convex/react-clerk` automatically fetches the Clerk auth token and passes it to Convex with every request. Convex then validates it against the `auth.config.ts` you set up in Phase 3. This is entirely automatic — no manual token handling needed.
+
+> ⚠️ **Important — Use the Right Hooks and Components:**
+> - When checking auth state in your components, **always use `useConvexAuth()`** from `convex/react` — not Clerk's `useAuth()`. `useConvexAuth()` confirms that the token has been fetched *and* validated by Convex, not just that Clerk has a session.
+> - For conditionally rendering UI, **always use Convex's `<Authenticated>`, `<Unauthenticated>`, and `<AuthLoading>`** components from `convex/react` — not Clerk's `<SignedIn>`, `<SignedOut>`, or `<ClerkLoading>`. Convex's versions are tied to the full validation cycle including the backend token check.
 
 ### 4.3 Implement RBAC Routing
 
@@ -549,7 +568,7 @@ export default function AuthCallback() {
 
 ### 4.4 Wire Up Providers in the Web Admin App
 
-Update `main.tsx`:
+Update `main.tsx`. The wrapping order here is critical — `<ClerkProvider>` must always be the outer wrapper, with `<ConvexProviderWithClerk>` sitting inside it. Convex needs to be able to read the Clerk context, so reversing the order will break authentication.
 
 ```tsx
 import { ClerkProvider } from "@clerk/clerk-react";
@@ -569,6 +588,8 @@ function App() {
   );
 }
 ```
+
+> ⚠️ **Same hook/component rule applies here:** Use `useConvexAuth()` from `convex/react` (not Clerk's `useAuth()`) whenever you need to check auth state. Use `<Authenticated>`, `<Unauthenticated>`, and `<AuthLoading>` from `convex/react` for conditional rendering — not Clerk's equivalents. The admin portal's gatekeeping logic should rely on `useConvexAuth()` confirming the session is valid all the way through to the Convex backend before rendering any admin UI.
 
 ### 4.5 Agent Provisioning (Admin Web Portal)
 
@@ -647,7 +668,7 @@ With the backend fully wired, here is a summary of what to build per role:
 | `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` | Mobile | Clerk Dashboard → API Keys |
 | `VITE_CLERK_PUBLISHABLE_KEY` | Web Admin | Clerk Dashboard → API Keys |
 | `CLERK_SECRET_KEY` | Server only | Clerk Dashboard → API Keys |
-| `CLERK_JWT_ISSUER_DOMAIN` | `convex/auth.config.ts` | Clerk Dashboard → Integrations → Convex (Frontend API URL) |
+| `CLERK_FRONTEND_API_URL` | `convex/auth.config.ts` | Clerk Dashboard → Integrations → Convex (revealed after activation) |
 | `CLERK_WEBHOOK_SECRET` | Convex env vars | Clerk Dashboard → Webhooks → Signing Secret |
 | `EXPO_PUBLIC_CONVEX_URL` | Mobile | Convex Dashboard → Settings |
 | `VITE_CONVEX_URL` | Web Admin | Convex Dashboard → Settings |
@@ -704,4 +725,4 @@ useRole() hook can now read the role from the DB
 
 ---
 
-*Last updated to reflect the correct Clerk + Convex integration method — auth configured via `convex/auth.config.ts`, not the Convex Dashboard UI. User data sync via webhooks is a separate concern from authentication.*
+*Last updated based on official Clerk + Convex integration documentation. Key points: auth is configured via `convex/auth.config.ts` using `CLERK_FRONTEND_API_URL` (not `CLERK_JWT_ISSUER_DOMAIN`, not the Convex Dashboard UI). User data sync via webhooks is a separate concern. Always use `useConvexAuth()` and Convex's auth components — not Clerk's equivalents — for auth state checks.*

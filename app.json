@@ -26,8 +26,11 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "scheme": "smuinfra2",
     "plugins": [
-      "expo-maps"
+      "expo-router",
+      "expo-maps",
+      "expo-secure-store"
     ]
   }
 }
