@@ -54,7 +54,7 @@ export default function SignInScreen() {
           return;
         }
 
-        setAuthTarget("/(customer)/map");
+        setAuthTarget("/(customer)/");
         await setActive({ session: result.createdSessionId });
       }
     } catch (err: any) {

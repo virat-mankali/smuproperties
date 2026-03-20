@@ -55,7 +55,7 @@ export default function SignUpScreen() {
     try {
       const result = await signUp.attemptEmailAddressVerification({ code });
       if (result.status === "complete") {
-        setAuthTarget("/(customer)/map");
+        setAuthTarget("/(customer)/");
         await setActive({ session: result.createdSessionId });
       }
     } catch (err: any) {

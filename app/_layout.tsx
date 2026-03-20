@@ -50,7 +50,7 @@ function AuthNavigator() {
       if (user?.role === "agent") {
         router.replace("/(agent)/dashboard");
       } else {
-        router.replace("/(customer)/map");
+        router.replace("/(customer)/");
       }
     } else if (!isSignedIn && !inAuthGroup) {
       router.replace("/(auth)/sign-in");

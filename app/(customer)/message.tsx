@@ -2,13 +2,13 @@ import { View, Text, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 
-export default function MapScreen() {
+export default function MessageScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
-        <Ionicons name="map-outline" size={48} color="#ccc" />
-        <Text style={styles.title}>Property Map</Text>
-        <Text style={styles.subtitle}>Map with property listings will appear here</Text>
+        <Ionicons name="chatbubble-outline" size={48} color="#ccc" />
+        <Text style={styles.title}>Messages</Text>
+        <Text style={styles.subtitle}>Your conversations will appear here</Text>
       </View>
     </SafeAreaView>
   );

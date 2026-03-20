@@ -2,10 +2,10 @@
 // `pending` distinguishes a fresh sign-in (target was explicitly set)
 // from a reload (no target was set, must read role from DB).
 
-let target: "/(customer)/map" | "/(agent)/dashboard" = "/(customer)/map";
+let target: "/(customer)/" | "/(agent)/dashboard" = "/(customer)/";
 let pending = false;
 
-export function setAuthTarget(t: typeof target) {
+export function setAuthTarget(t: "/(customer)/" | "/(agent)/dashboard") {
   target = t;
   pending = true;
 }
@@ -20,7 +20,7 @@ export function hasPendingTarget() {
 
 export function consumeAuthTarget() {
   const t = target;
-  target = "/(customer)/map";
+  target = "/(customer)/";
   pending = false;
   return t;
 }
