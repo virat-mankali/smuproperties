@@ -6,7 +6,6 @@ import * as SecureStore from "expo-secure-store";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { useEffect } from "react";
 import { hasPendingTarget, consumeAuthTarget } from "../hooks/useAuthTarget";
-import { api } from "../convex/_generated/api";
 
 const convex = new ConvexReactClient(
   process.env.EXPO_PUBLIC_CONVEX_URL!
@@ -28,7 +27,7 @@ function AuthNavigator() {
   const { isSignedIn, isLoaded } = useAuth();
   const segments = useSegments();
   const router = useRouter();
-  const user = useQuery(api.users.getMe);
+  const user = useQuery("users:getMe" as any);
 
   useEffect(() => {
     if (!isLoaded) return;

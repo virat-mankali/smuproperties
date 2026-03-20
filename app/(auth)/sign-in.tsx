@@ -2,7 +2,6 @@ import { useSignIn, useClerk } from "@clerk/clerk-expo";
 import { Link } from "expo-router";
 import { useState } from "react";
 import { useConvex } from "convex/react";
-import { api } from "../../convex/_generated/api";
 import {
   View,
   Text,
@@ -41,7 +40,7 @@ export default function SignInScreen() {
       });
 
       if (result.status === "complete") {
-        const role = await convex.query(api.users.getRoleByEmail, { email });
+        const role = await convex.query("users:getRoleByEmail" as any, { email });
 
         if (role === "agent") {
           await setActive({ session: result.createdSessionId });

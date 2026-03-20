@@ -3,13 +3,13 @@ import { useQuery } from "convex/react";
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { api } from "../../convex/_generated/api";
+
 
 const PURPLE = "#7c3aed";
 
 export default function ProfileScreen() {
   const { signOut } = useClerk();
-  const user = useQuery(api.users.getMe);
+  const user = useQuery("users:getMe" as any);
 
   return (
     <SafeAreaView style={styles.safe}>

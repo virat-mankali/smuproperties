@@ -13,8 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
-import { api } from "../../../convex/_generated/api";
-import { Id } from "../../../convex/_generated/dataModel";
+
 
 const PURPLE = "#7c3aed";
 const { width: SCREEN_W } = Dimensions.get("window");
@@ -32,8 +31,8 @@ export default function PropertyDetailScreen() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [saved, setSaved] = useState(false);
 
-  const property = useQuery(api.properties.getById, {
-    id: id as Id<"properties">,
+  const property = useQuery("properties:getById" as any, {
+    id: id as string,
   });
 
   if (property === undefined) {

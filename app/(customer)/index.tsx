@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { api } from "../../convex/_generated/api";
+
 
 const PURPLE = "#7c3aed";
 const BG = "#f5f0ff";
@@ -37,11 +37,11 @@ export default function HomeScreen() {
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const [search, setSearch] = useState("");
 
-  const properties = useQuery(api.properties.listPublic, {
+  const properties = useQuery("properties:listPublic" as any, {
     propertyType: activeFilter,
   });
 
-  const filtered = properties?.filter((p) =>
+  const filtered = (properties as any[])?.filter((p: any) =>
     search.trim()
       ? p.title.toLowerCase().includes(search.toLowerCase()) ||
         p.address.toLowerCase().includes(search.toLowerCase())
@@ -119,7 +119,7 @@ export default function HomeScreen() {
         {properties === undefined ? (
           <ActivityIndicator color={PURPLE} style={{ marginTop: 40 }} />
         ) : filtered && filtered.length > 0 ? (
-          filtered.map((item, idx) => (
+          filtered.map((item: any, idx: number) => (
             <TouchableOpacity
               key={item._id}
               style={styles.card}
