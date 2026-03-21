@@ -106,19 +106,21 @@ export default function ListingsScreen() {
         ) : filtered && filtered.length > 0 ? (
           filtered.map((item: any) => (
             <View key={item._id} style={styles.card}>
-              <Image
-                source={{ uri: item.imageUrl ?? PLACEHOLDER }}
-                style={styles.cardImage}
-                resizeMode="cover"
-              />
+              <View style={styles.imageWrap}>
+                <Image
+                  source={{ uri: item.imageUrl ?? PLACEHOLDER }}
+                  style={styles.cardImage}
+                  resizeMode="cover"
+                />
+                <View style={[styles.badge, { backgroundColor: (STATUS_COLORS[item.status] ?? "#888") + "ee" }]}>
+                  <Text style={styles.badgeText}>
+                    {STATUS_LABELS[item.status] ?? item.status}
+                  </Text>
+                </View>
+              </View>
               <View style={styles.cardBody}>
                 <View style={styles.cardTopRow}>
                   <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
-                  <View style={[styles.badge, { backgroundColor: (STATUS_COLORS[item.status] ?? "#888") + "20" }]}>
-                    <Text style={[styles.badgeText, { color: STATUS_COLORS[item.status] ?? "#888" }]}>
-                      {STATUS_LABELS[item.status] ?? item.status}
-                    </Text>
-                  </View>
                 </View>
                 <View style={styles.addressRow}>
                   <Ionicons name="location-outline" size={13} color="#888" />
@@ -202,8 +204,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  filterScroll: { marginBottom: 12 },
-  filterContent: { paddingHorizontal: 20, gap: 10 },
+  filterScroll: { marginBottom: 12, flexGrow: 0 },
+  filterContent: { paddingHorizontal: 20, gap: 10, alignItems: "center" },
   chip: {
     paddingHorizontal: 16,
     paddingVertical: 7,
@@ -211,6 +213,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderWidth: 1,
     borderColor: "#e5e7eb",
+    alignSelf: "flex-start",
   },
   chipActive: { backgroundColor: PURPLE, borderColor: PURPLE },
   chipText: { fontSize: 13, fontWeight: "500", color: "#555" },
@@ -228,12 +231,20 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
+  imageWrap: { position: "relative" },
   cardImage: { width: "100%", height: 160 },
   cardBody: { padding: 14 },
   cardTopRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 4 },
   cardTitle: { flex: 1, fontSize: 15, fontWeight: "700", color: "#1a1a1a", marginRight: 8 },
-  badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
-  badgeText: { fontSize: 11, fontWeight: "600" },
+  badge: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  badgeText: { fontSize: 11, fontWeight: "700", color: "#fff" },
   addressRow: { flexDirection: "row", alignItems: "center", gap: 3, marginBottom: 8 },
   address: { fontSize: 12, color: "#888", flex: 1 },
   cardFooter: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
