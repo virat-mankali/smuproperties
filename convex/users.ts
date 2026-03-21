@@ -45,6 +45,20 @@ export const getMe = query({
   },
 });
 
+export const updatePhone = mutation({
+  args: { phone: v.string() },
+  handler: async (ctx, { phone }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .unique();
+    if (!user) throw new Error("User not found");
+    await ctx.db.patch(user._id, { phone });
+  },
+});
+
 // Public query to check a user's role by email — used during sign-in
 // before Convex auth token is available
 export const getRoleByEmail = query({

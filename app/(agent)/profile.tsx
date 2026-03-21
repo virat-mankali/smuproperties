@@ -1,5 +1,5 @@
 import { useClerk } from "@clerk/clerk-expo";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import {
   View,
@@ -39,6 +39,7 @@ export default function AgentProfileScreen() {
   const { signOut } = useClerk();
   const user = useQuery("users:getMe" as any);
   const stats = useQuery("properties:getAgentStats" as any);
+  const updatePhone = useMutation("users:updatePhone" as any);
 
   const [notifNewLead, setNotifNewLead] = useState(true);
   const [notifMessages, setNotifMessages] = useState(true);
@@ -46,6 +47,7 @@ export default function AgentProfileScreen() {
   const [notifUpdates, setNotifUpdates] = useState(true);
   const [phoneModal, setPhoneModal] = useState(false);
   const [phoneInput, setPhoneInput] = useState("");
+  const [savingPhone, setSavingPhone] = useState(false);
 
   const STAT_ITEMS = [
     { label: "Listings", value: stats?.totalListings ?? 0 },
@@ -207,11 +209,22 @@ export default function AgentProfileScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.modalSave}
-                  onPress={() => setPhoneModal(false)}
+                  onPress={async () => {
+                    try {
+                      setSavingPhone(true);
+                      await updatePhone({ phone: phoneInput.trim() });
+                      setPhoneModal(false);
+                    } catch (e) {
+                      Alert.alert("Error", "Failed to update phone number.");
+                    } finally {
+                      setSavingPhone(false);
+                    }
+                  }}
+                  disabled={savingPhone}
                   accessibilityRole="button"
                   accessibilityLabel="Save phone number"
                 >
-                  <Text style={styles.modalSaveText}>Save</Text>
+                  <Text style={styles.modalSaveText}>{savingPhone ? "Saving…" : "Save"}</Text>
                 </TouchableOpacity>
               </View>
             </View>
