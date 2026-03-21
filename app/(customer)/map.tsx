@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 export default function MapScreen() {
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.container}>
         <Ionicons name="map-outline" size={48} color="#ccc" />
         <Text style={styles.title}>Property Map</Text>

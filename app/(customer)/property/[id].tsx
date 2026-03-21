@@ -37,7 +37,7 @@ export default function PropertyDetailScreen() {
 
   if (property === undefined) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
+      <SafeAreaView style={styles.loadingContainer} edges={["top"]}>
         <ActivityIndicator size="large" color={PURPLE} />
       </SafeAreaView>
     );
@@ -45,7 +45,7 @@ export default function PropertyDetailScreen() {
 
   if (property === null) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
+      <SafeAreaView style={styles.loadingContainer} edges={["top"]}>
         <Text style={styles.errorText}>Property not found</Text>
       </SafeAreaView>
     );
@@ -68,7 +68,7 @@ export default function PropertyDetailScreen() {
     property.propertyType.slice(1);
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={["top"]}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Top Nav */}
         <View style={styles.topNav}>

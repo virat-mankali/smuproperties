@@ -63,7 +63,7 @@ export default function ListingsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={["top"]}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>My Listings</Text>
