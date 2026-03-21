@@ -9,18 +9,18 @@ import {
   Image,
   ScrollView,
   Switch,
-  TextInput,
-  Modal,
   Linking,
   Alert,
+  Modal,
+  TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 
 const PURPLE = "#7c3aed";
 const BG = "#f5f0ff";
 
+// Placeholder social links — replace with real URLs when ready
 const SOCIAL_LINKS = {
   instagram: "",
   facebook: "",
@@ -35,33 +35,30 @@ const SOCIALS: { key: keyof typeof SOCIAL_LINKS; label: string; icon: string; co
   { key: "threads", label: "Threads", icon: "chatbubble-ellipses-outline", color: "#000" },
 ];
 
-const PLACEHOLDER_IMAGES = [
-  "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&q=80",
-  "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=400&q=80",
-  "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400&q=80",
-];
-
-export default function ProfileScreen() {
+export default function AgentProfileScreen() {
   const { signOut } = useClerk();
-  const router = useRouter();
   const user = useQuery("users:getMe" as any);
-  const savedProperties = useQuery("properties:getSavedByUser" as any);
+  const stats = useQuery("properties:getAgentStats" as any);
 
-  const [notifNewListings, setNotifNewListings] = useState(true);
-  const [notifPriceDrops, setNotifPriceDrops] = useState(true);
+  const [notifNewLead, setNotifNewLead] = useState(true);
   const [notifMessages, setNotifMessages] = useState(true);
-  const [notifUpdates, setNotifUpdates] = useState(false);
+  const [notifListingViews, setNotifListingViews] = useState(false);
+  const [notifUpdates, setNotifUpdates] = useState(true);
   const [phoneModal, setPhoneModal] = useState(false);
   const [phoneInput, setPhoneInput] = useState("");
 
-  const NOTIF_ROWS = [
-    { label: "New Listings", sub: "When new properties match your search", value: notifNewListings, onChange: setNotifNewListings },
-    { label: "Price Drops", sub: "When a saved property drops in price", value: notifPriceDrops, onChange: setNotifPriceDrops },
-    { label: "Messages", sub: "Replies from agents", value: notifMessages, onChange: setNotifMessages },
-    { label: "App Updates", sub: "New features and announcements", value: notifUpdates, onChange: setNotifUpdates },
+  const STAT_ITEMS = [
+    { label: "Listings", value: stats?.totalListings ?? 0 },
+    { label: "Views", value: stats?.totalViews ?? 0 },
+    { label: "Leads", value: stats?.totalLeads ?? 0 },
   ];
 
-  const savedCount = (savedProperties as any[])?.length ?? 0;
+  const NOTIF_ROWS = [
+    { label: "New Lead", sub: "When a customer saves your property", value: notifNewLead, onChange: setNotifNewLead },
+    { label: "Messages", sub: "When you receive a new message", value: notifMessages, onChange: setNotifMessages },
+    { label: "Listing Views", sub: "Daily view count summary", value: notifListingViews, onChange: setNotifListingViews },
+    { label: "App Updates", sub: "New features and announcements", value: notifUpdates, onChange: setNotifUpdates },
+  ];
 
   const handleSocialPress = (key: keyof typeof SOCIAL_LINKS) => {
     const url = SOCIAL_LINKS[key];
@@ -75,7 +72,6 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-
         {/* Avatar + Name */}
         <View style={styles.avatarSection}>
           <View style={styles.avatarWrap}>
@@ -85,72 +81,26 @@ export default function ProfileScreen() {
               <Ionicons name="person" size={44} color="#fff" />
             )}
           </View>
-          <Text style={styles.name}>{user?.name ?? "Customer"}</Text>
+          <Text style={styles.name}>{user?.name ?? "Agent"}</Text>
           <Text style={styles.emailText}>{user?.email ?? ""}</Text>
+          <View style={styles.roleBadge}>
+            <Ionicons name="shield-checkmark-outline" size={13} color={PURPLE} />
+            <Text style={styles.roleText}>Verified Agent</Text>
+          </View>
         </View>
 
         {/* Stats Strip */}
         <View style={styles.statsStrip}>
-          <View style={[styles.statItem, styles.statDivider]}>
-            <Text style={styles.statValue}>{savedCount}</Text>
-            <Text style={styles.statLabel}>Saved</Text>
-          </View>
-          <View style={[styles.statItem, styles.statDivider]}>
-            <Text style={styles.statValue}>0</Text>
-            <Text style={styles.statLabel}>Enquiries</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>0</Text>
-            <Text style={styles.statLabel}>Tours</Text>
-          </View>
-        </View>
-
-        {/* Saved Properties */}
-        <Text style={styles.sectionTitle}>Saved Properties</Text>
-        {savedProperties === undefined ? null : savedCount === 0 ? (
-          <View style={styles.emptyCard}>
-            <Ionicons name="heart-outline" size={32} color="#ccc" />
-            <Text style={styles.emptyText}>No saved properties yet</Text>
-            <TouchableOpacity
-              onPress={() => router.push("/(customer)/search")}
-              accessibilityRole="button"
-              accessibilityLabel="Browse properties"
+          {STAT_ITEMS.map((s, i) => (
+            <View
+              key={s.label}
+              style={[styles.statItem, i < STAT_ITEMS.length - 1 && styles.statDivider]}
             >
-              <Text style={styles.emptyLink}>Browse properties</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.savedScroll}
-          >
-            {(savedProperties as any[]).map((item: any, idx: number) => (
-              <TouchableOpacity
-                key={item._id}
-                style={styles.savedCard}
-                onPress={() => router.push(`/(customer)/property/${item._id}`)}
-                accessibilityRole="button"
-                accessibilityLabel={`View ${item.title}`}
-              >
-                <Image
-                  source={{ uri: item.imageUrl ?? PLACEHOLDER_IMAGES[idx % PLACEHOLDER_IMAGES.length] }}
-                  style={styles.savedCardImage}
-                  resizeMode="cover"
-                />
-                <View style={styles.savedCardBody}>
-                  <Text style={styles.savedCardTitle} numberOfLines={1}>{item.title}</Text>
-                  <Text style={styles.savedCardAddress} numberOfLines={1}>{item.address}</Text>
-                  <Text style={styles.savedCardPrice}>
-                    ₹{item.price >= 100000
-                      ? `${(item.price / 100000).toFixed(1)}L`
-                      : item.price.toLocaleString()}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        )}
+              <Text style={styles.statValue}>{s.value}</Text>
+              <Text style={styles.statLabel}>{s.label}</Text>
+            </View>
+          ))}
+        </View>
 
         {/* Social Links */}
         <Text style={styles.sectionTitle}>Social Links</Text>
@@ -257,10 +207,7 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.modalSave}
-                  onPress={() => {
-                    // Phone update wired to backend when ready
-                    setPhoneModal(false);
-                  }}
+                  onPress={() => setPhoneModal(false)}
                   accessibilityRole="button"
                   accessibilityLabel="Save phone number"
                 >
@@ -281,7 +228,6 @@ export default function ProfileScreen() {
           <Ionicons name="log-out-outline" size={18} color="#fff" />
           <Text style={styles.signOutText}>Sign Out</Text>
         </TouchableOpacity>
-
       </ScrollView>
     </SafeAreaView>
   );
@@ -309,6 +255,17 @@ const styles = StyleSheet.create({
   avatar: { width: 96, height: 96 },
   name: { fontSize: 22, fontWeight: "700", color: "#1a1a1a" },
   emailText: { fontSize: 14, color: "#888", marginTop: 4 },
+  roleBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 8,
+    backgroundColor: "#f0e8ff",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
+  roleText: { fontSize: 12, fontWeight: "600", color: PURPLE },
 
   statsStrip: {
     flexDirection: "row",
@@ -336,39 +293,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 
-  emptyCard: {
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    marginHorizontal: 20,
-    marginBottom: 24,
-    paddingVertical: 28,
-    gap: 8,
-    shadowColor: "#000",
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 1,
-  },
-  emptyText: { fontSize: 14, color: "#aaa" },
-  emptyLink: { fontSize: 14, color: PURPLE, fontWeight: "600" },
-
-  savedScroll: { paddingHorizontal: 20, paddingBottom: 24, gap: 12 },
-  savedCard: {
-    width: 180,
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  savedCardImage: { width: "100%", height: 110 },
-  savedCardBody: { padding: 10 },
-  savedCardTitle: { fontSize: 13, fontWeight: "700", color: "#1a1a1a" },
-  savedCardAddress: { fontSize: 11, color: "#888", marginTop: 2 },
-  savedCardPrice: { fontSize: 14, fontWeight: "700", color: PURPLE, marginTop: 6 },
-
   card: {
     backgroundColor: "#fff",
     borderRadius: 16,
@@ -380,6 +304,25 @@ const styles = StyleSheet.create({
     elevation: 2,
     overflow: "hidden",
   },
+
+  socialRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  socialIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  socialInfo: { flex: 1 },
+  socialLabel: { fontSize: 14, fontWeight: "600", color: "#1a1a1a" },
+  socialSub: { fontSize: 12, color: "#aaa", marginTop: 2 },
+
   notifRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -389,6 +332,7 @@ const styles = StyleSheet.create({
   notifInfo: { flex: 1 },
   notifLabel: { fontSize: 14, fontWeight: "600", color: "#1a1a1a" },
   notifSub: { fontSize: 12, color: "#aaa", marginTop: 2 },
+
   rowDivider: { borderBottomWidth: 1, borderBottomColor: "#f5f5f5" },
 
   infoRow: {
@@ -420,24 +364,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   editPillText: { fontSize: 12, fontWeight: "600", color: PURPLE },
-
-  socialRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-  },
-  socialIconWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
-  socialInfo: { flex: 1 },
-  socialLabel: { fontSize: 14, fontWeight: "600", color: "#1a1a1a" },
-  socialSub: { fontSize: 12, color: "#aaa", marginTop: 2 },
 
   signOutBtn: {
     flexDirection: "row",
